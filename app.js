@@ -17,7 +17,7 @@ async function download(img) {
     }
 }
 
-async function resizeImage(req, res, url, width, height) {
+async function resizeImage(req, res, url, width, height, quality = 100) {
 
     img = await download(url).catch();
     if (!img) {
@@ -41,6 +41,7 @@ async function resizeImage(req, res, url, width, height) {
             limitInputPixels: false
         }).resize(resize).jpeg({
             progressive: true,
+            quality: quality,
             force: false
         }).toBuffer();
     } else if (ext == 'png') {
@@ -48,11 +49,13 @@ async function resizeImage(req, res, url, width, height) {
             limitInputPixels: false
         }).resize(resize).png({
             progressive: true,
+            quality: quality,
             force: false
         }).toBuffer();
     } else {
         img = await sharp(img, {
-            limitInputPixels: false
+            limitInputPixels: false,
+            quality: quality,
         }).resize(resize).toBuffer();
     }
     res.setHeader('Cache-control', 'public, max-age=15552000');
@@ -71,13 +74,14 @@ const requestListener = async function(req, res) {
     let match;
     let img;
 
-    regex = /(\d+)x(\d+)\/(filters\:fill\(fff\)\/|)(.*.(png|jpeg|jpg|webp))/i;
+    regex = /(\d+)x(\d+)\/((\d+)\/|)(.*.(png|jpeg|jpg|webp))/i;
     if (req.url.match(regex)) {
         match = regex.exec(req.url);
-        url = match[4];
+        url = match[5];
         let width = parseInt(match[1]);
         let height = parseInt(match[2]);
-        await resizeImage(req, res, url, width, height);
+        let quality = parseInt(match[5]);
+        await resizeImage(req, res, url, width, height, quality ? quality : 100);
         return;
     }
 
