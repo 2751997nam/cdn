@@ -75,7 +75,7 @@ const requestListener = async function(req, res) {
     let img;
 
     regex = /(\d+)x(\d+)\/((\d+)\/|)(.*.(png|jpeg|jpg|webp))/i;
-    if (req.url.match(regex)) {
+    if (req.url.toLowerCase().match(regex)) {
         match = regex.exec(req.url);
         url = match[5];
         let width = parseInt(match[1]);
@@ -83,6 +83,15 @@ const requestListener = async function(req, res) {
         let quality = parseInt(match[5]);
         await resizeImage(req, res, url, width, height, quality ? quality : 100);
         return;
+    }
+
+    regex = /(\d+)x(\d+)\/((\d+)\/|)(.*.(svg|jfif|gif))/i;
+
+    if (req.url.toLowerCase().match(regex)) {
+        match = regex.exec(req.url);
+        url = match[5];
+        url = `https://${url}`;
+        return redirect(req, res, url);
     }
 
     if (req.url == '/favicon.ico') {
