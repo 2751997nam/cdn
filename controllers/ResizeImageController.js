@@ -2,6 +2,7 @@ const sharp = require('sharp');
 const axios = require("axios");
 var path = require('path');
 var fs = require('fs');
+const config = require('../config');
 
 async function download(img) {
     let url = `https://${img}`;
@@ -99,7 +100,23 @@ async function redirect(req, res, url) {
     res.end();
 }
 
+async function flushCache (req, res) {
+    if (req.query.token != config.api_token) {
+        return res.json({
+            status: 'failed',
+            message: 'token mismatch'
+        });
+    }
+    fs.rmSync(global.dir + '/public/images', { recursive: true, force: true });
+    fs.mkdirSync(global.dir + '/public/images', {recursive: true});
+
+    return res.json({
+        status: 'successful'
+    });
+}
+
 module.exports = {
     resize,
+    flushCache,
     redirectUnsuportImage
 }
