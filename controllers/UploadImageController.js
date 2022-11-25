@@ -10,11 +10,11 @@ class UploadImageController {
         return num > 9 ? num : `0${num}`;
     }
     async upload(request, response, next) {
-        let params  = request.body;
+        let params  = {...request.query, ...request.body};
         let retVal = {
             status: 'fail',
             message: '',
-            result: ''
+            result: []
         }
 
         if (params.token !== Config.api_token) {
@@ -26,7 +26,7 @@ class UploadImageController {
                 let file = request.files[key];
                 if (!file.truncated) {
                     let type = params.type ? params.type : 'default';
-                    let site = params.site ? params.site : 'default';
+                    let site = params.site ? params.site.replace('https://', '').replace('http://', '').replace('www.', '') : 'default';
                     let date = new Date();
                     let fileName = file.md5 + file.name.substring(file.name.lastIndexOf('.'));
                     let basePath = `upload/${site}/${type}/${date.getFullYear()}-${this.padZero(date.getMonth() + 1)}-${this.padZero(date.getDate())}`;
@@ -43,7 +43,7 @@ class UploadImageController {
                                 reject();
                             }
                             retVal.status = 'successful';
-                            retVal.result = `${config.app_url}/${basePath}/${fileName}`;
+                            retVal.result.push(`${config.app_url}/${basePath}/${fileName}`);
                             resolve();
                         })
                     })
