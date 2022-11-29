@@ -32,7 +32,7 @@ async function resizeImage(req, res, url, width, height, quality = 85) {
         resize.height = height;
     }
     let ext = url.match(/\.([0-9a-z]+)(?:[\?#]|$)/i)[1].toLowerCase();
-    ext = (ext == 'jpg' || ext == 'png') ? 'jpeg' : ext;
+    ext = (ext == 'jpg') ? 'jpeg' : ext;
     if (ext == 'jpeg') {
         img = await sharp(img, {
             limitInputPixels: false

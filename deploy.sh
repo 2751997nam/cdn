@@ -1,1 +1,1 @@
-ssh root@172.245.213.195 -t "cd /home/cdn && git pull && pm2 restart cdn"
+ssh root@172.245.213.195 -t "cd /home/cdn && git pull && npm install && pm2 restart cdn"
