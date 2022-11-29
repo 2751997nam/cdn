@@ -55,7 +55,7 @@ async function resizeImage(req, res, url, width, height, quality = 85) {
             quality: quality,
         }).resize(resize).toBuffer();
     }
-    // saveFile(req.url, img);
+    saveFile(req.url, img);
     res.setHeader('Cache-control', 'public, max-age=15552000');
     res.setHeader('Content-Type', `image/${ext}`);
     res.setHeader('access-control-allow-origin', '*');
