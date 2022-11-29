@@ -15,7 +15,7 @@ async function download(img) {
     }
 }
 
-async function resizeImage(req, res, url, width, height, quality = 100) {
+async function resizeImage(req, res, url, width, height, quality = 85) {
     let img = await download(url).catch();
     if (!img) {
         // console.error(`Image not found ${req.url}`);
@@ -31,8 +31,8 @@ async function resizeImage(req, res, url, width, height, quality = 100) {
     if (height) {
         resize.height = height;
     }
-    let ext = url.match(/\.([0-9a-z]+)(?:[\?#]|$)/i)[1];
-    ext = (ext == 'jpg') ? 'jpeg' : ext;
+    let ext = url.match(/\.([0-9a-z]+)(?:[\?#]|$)/i)[1].toLowerCase();
+    ext = (ext == 'jpg' || ext == 'png') ? 'jpeg' : ext;
     if (ext == 'jpeg') {
         img = await sharp(img, {
             limitInputPixels: false
@@ -55,7 +55,7 @@ async function resizeImage(req, res, url, width, height, quality = 100) {
             quality: quality,
         }).resize(resize).toBuffer();
     }
-    saveFile(req.url, img);
+    // saveFile(req.url, img);
     res.setHeader('Cache-control', 'public, max-age=15552000');
     res.setHeader('Content-Type', `image/${ext}`);
     res.setHeader('access-control-allow-origin', '*');
@@ -78,7 +78,7 @@ const resize = async (req, res) => {
     let width = parseInt(resolution[0]);
     let height = parseInt(resolution[1]);
     let url = req.params.url;
-    let quality = req.params.quality ? parseInt(req.params.quality) : 100;
+    let quality = req.params.quality ? parseInt(req.params.quality) : 85;
 
     await resizeImage(req, res, url, width, height, quality);
 }
