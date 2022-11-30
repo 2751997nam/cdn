@@ -15,7 +15,7 @@ async function download(img) {
     }
 }
 
-async function resizeImage(req, res, url, width, height, quality = 85) {
+async function resizeImage(req, res, url, fitIn, width, height, quality = 85) {
     let img = await download(url).catch();
     if (!img) {
         // console.error(`Image not found ${req.url}`);
@@ -23,7 +23,10 @@ async function resizeImage(req, res, url, width, height, quality = 85) {
         return redirect(req, res, url);
     }
     let resize = {
-        fit: sharp.fit.inside,
+        fit: fitIn ? sharp.fit.inside : sharp.fit.contain,
+    }
+    if (!fitIn) {
+        resize.background =  '#fff';
     }
     if (width) {
         resize.width = width;
@@ -32,11 +35,13 @@ async function resizeImage(req, res, url, width, height, quality = 85) {
         resize.height = height;
     }
     let ext = url.match(/\.([0-9a-z]+)(?:[\?#]|$)/i)[1].toLowerCase();
-    ext = (ext == 'jpg') ? 'jpeg' : ext;
+    ext = (ext == 'jpg' || (!fitIn && ext == 'png')) ? 'jpeg' : ext;
     if (ext == 'jpeg') {
         img = await sharp(img, {
             limitInputPixels: false
-        }).resize(resize).jpeg({
+        })
+        .resize(resize)
+        .jpeg({
             progressive: true,
             quality: quality,
             force: false
@@ -44,7 +49,9 @@ async function resizeImage(req, res, url, width, height, quality = 85) {
     } else if (ext == 'png') {
         img = await sharp(img, {
             limitInputPixels: false
-        }).resize(resize).png({
+        })
+        .resize(resize)
+        .png({
             progressive: true,
             quality: quality,
             force: false
@@ -53,9 +60,17 @@ async function resizeImage(req, res, url, width, height, quality = 85) {
         img = await sharp(img, {
             limitInputPixels: false,
             quality: quality,
-        }).resize(resize).toBuffer();
+        })
+        .resize(resize)
+        .jpeg({
+            progressive: true,
+            quality: quality,
+            force: false
+        }).toBuffer();
     }
-    saveFile(req.url, img);
+    if (config.save_file) {
+        saveFile(req.url, img);
+    }
     res.setHeader('Cache-control', 'public, max-age=15552000');
     res.setHeader('Content-Type', `image/${ext}`);
     res.setHeader('access-control-allow-origin', '*');
@@ -76,11 +91,12 @@ const resize = async (req, res) => {
 
     let resolution = req.params.resolution.split('x');
     let width = parseInt(resolution[0]);
+    let fitIn = req.params.fitIn ? true : false;
     let height = parseInt(resolution[1]);
     let url = req.params.url;
     let quality = req.params.quality ? parseInt(req.params.quality) : 85;
 
-    await resizeImage(req, res, url, width, height, quality);
+    await resizeImage(req, res, url, fitIn, width, height, quality);
 }
 
 const redirectUnsuportImage = (req, res) => {
