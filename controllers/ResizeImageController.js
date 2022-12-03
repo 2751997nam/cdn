@@ -36,17 +36,7 @@ async function resizeImage(req, res, url, fitIn, width, height, quality = 85) {
     }
     let ext = url.match(/\.([0-9a-z]+)(?:[\?#]|$)/i)[1].toLowerCase();
     ext = (ext == 'jpg' || (!fitIn && ext == 'png')) ? 'jpeg' : ext;
-    if (ext == 'jpeg') {
-        img = await sharp(img, {
-            limitInputPixels: false
-        })
-        .resize(resize)
-        .jpeg({
-            progressive: true,
-            quality: quality,
-            force: false
-        }).toBuffer();
-    } else if (ext == 'png') {
+    if (ext == 'png') {
         img = await sharp(img, {
             limitInputPixels: false
         })
@@ -58,14 +48,13 @@ async function resizeImage(req, res, url, fitIn, width, height, quality = 85) {
         }).toBuffer();
     } else {
         img = await sharp(img, {
-            limitInputPixels: false,
-            quality: quality,
+            limitInputPixels: false
         })
         .resize(resize)
-        .jpeg({
-            progressive: true,
+        .webp({
             quality: quality,
-            force: false
+            force: true,
+            lossless: false
         }).toBuffer();
     }
     if (config.save_file) {
